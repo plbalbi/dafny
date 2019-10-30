@@ -7380,6 +7380,26 @@ namespace Microsoft.Dafny {
               var offset0 = FunctionCall(expr.tok, "ORD#Offset", Bpl.Type.Int, etran.TrExpr(e.E0));
               var offset1 = FunctionCall(expr.tok, "ORD#Offset", Bpl.Type.Int, etran.TrExpr(e.E1));
               builder.Add(Assert(expr.tok, Bpl.Expr.Le(offset1, offset0), "ORDINAL subtraction might underflow a limit ordinal (that is, RHS might be too large)"));
+            } else if (e.Type.IsIntegerType) {
+              var e0 = etran.TrExpr(e.E0);
+              var e1 = etran.TrExpr(e.E1);
+              var MAX_INT = Bpl.Expr.Literal(2147483647);
+              var MIN_INT = Bpl.Expr.Literal(-2147483648);
+              var ZERO = Bpl.Expr.Literal(0);
+              var e0GreaterThanZero = Bpl.Expr.Gt(e0, ZERO);
+              var e0LessThanZero = Bpl.Expr.Lt(e0, ZERO);
+              switch (e.ResolvedOp) {
+                case BinaryExpr.ResolvedOpcode.Add:
+                  var additionCondition = Bpl.Expr.Le(e0, Bpl.Expr.Binary(BinaryOperator.Opcode.Sub, MAX_INT, e1));
+                  var bothNegativesCondition = Bpl.Expr.Le(Bpl.Expr.Binary(BinaryOperator.Opcode.Sub, MIN_INT, e1), e0);
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(e0GreaterThanZero, additionCondition), "Integer addition overflows from above"));
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0LessThanZero, Bpl.Expr.Lt(e1, ZERO)), bothNegativesCondition), "Integer addition overflows from below"));
+                  break;
+                case BinaryExpr.ResolvedOpcode.Sub:
+                  var substractionCondition = Bpl.Expr.Le(Bpl.Expr.Binary(BinaryOperator.Opcode.Add, MIN_INT, e1), e0);
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(e0LessThanZero, substractionCondition), "Integer substractions overflows"));
+                  break;
+              }
             } else if (e.Type.IsCharType) {
               var e0 = FunctionCall(expr.tok, "char#ToInt", Bpl.Type.Int, etran.TrExpr(e.E0));
               var e1 = FunctionCall(expr.tok, "char#ToInt", Bpl.Type.Int, etran.TrExpr(e.E1));
