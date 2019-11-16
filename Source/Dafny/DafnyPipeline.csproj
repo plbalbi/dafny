@@ -170,6 +170,7 @@
     <Compile Include="Rewriter.cs" />
     <Compile Include="SccGraph.cs" />
     <Compile Include="Translator.cs" />
+    <Compile Include="IntegerConstants.cs" />
     <Compile Include="..\version.cs" />
   </ItemGroup>
   <ItemGroup>
