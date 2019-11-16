@@ -2453,6 +2453,7 @@ namespace Microsoft.Dafny {
             }
           }
         }
+
         comment = "user-defined postconditions";
         foreach (var p in iter.Ensures) {
           if (p.IsFree && !DafnyOptions.O.DisallowSoundnessCheating) {
@@ -7381,10 +7382,12 @@ namespace Microsoft.Dafny {
               var offset1 = FunctionCall(expr.tok, "ORD#Offset", Bpl.Type.Int, etran.TrExpr(e.E1));
               builder.Add(Assert(expr.tok, Bpl.Expr.Le(offset1, offset0), "ORDINAL subtraction might underflow a limit ordinal (that is, RHS might be too large)"));
             } else if (e.Type.IsIntegerType) {
-              var e0 = etran.TrExpr(e.E0);
-              var e1 = etran.TrExpr(e.E1);
               var MAX_INT = Bpl.Expr.Literal(2147483647);
               var MIN_INT = Bpl.Expr.Literal(-2147483648);
+              var e0 = etran.TrExpr(e.E0);
+              var e1 = etran.TrExpr(e.E1);
+              builder.Add(new Bpl.AssumeCmd(expr.tok, Bpl.Expr.And(Bpl.Expr.Le(MIN_INT, e0), Bpl.Expr.Le(e0, MAX_INT))));
+              builder.Add(new Bpl.AssumeCmd(expr.tok, Bpl.Expr.And(Bpl.Expr.Le(MIN_INT, e1), Bpl.Expr.Le(e1, MAX_INT))));
               var ZERO = Bpl.Expr.Literal(0);
               var e0GreaterThanZero = Bpl.Expr.Gt(e0, ZERO);
               var e0LessThanZero = Bpl.Expr.Lt(e0, ZERO);
