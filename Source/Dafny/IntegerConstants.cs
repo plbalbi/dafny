@@ -10,5 +10,6 @@ namespace Microsoft.Dafny {
     public class IntegerConstants {
         public static Bpl.Expr MaxValue = Bpl.Expr.Literal(Int32.MaxValue);
         public static Bpl.Expr MinValue = Bpl.Expr.Literal(Int32.MinValue);
+        public static Bpl.Expr Zero = Bpl.Expr.Literal(0);
     }
 }

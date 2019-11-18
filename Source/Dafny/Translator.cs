@@ -7384,23 +7384,26 @@ namespace Microsoft.Dafny {
             } else if (e.Type.IsIntegerType) {
               var e0 = etran.TrExpr(e.E0);
               var e1 = etran.TrExpr(e.E1);
+              // Assume both integer arguments are in the [MinInteger, MaxInteger] range
               builder.Add(new Bpl.AssumeCmd(expr.tok, Bpl.Expr.And(Bpl.Expr.Le(IntegerConstants.MinValue, e0), Bpl.Expr.Le(e0, IntegerConstants.MaxValue))));
               builder.Add(new Bpl.AssumeCmd(expr.tok, Bpl.Expr.And(Bpl.Expr.Le(IntegerConstants.MinValue, e1), Bpl.Expr.Le(e1, IntegerConstants.MaxValue))));
-              var ZERO = Bpl.Expr.Literal(0);
-              var e0GreaterThanZero = Bpl.Expr.Gt(e0, ZERO);
-              var e0LessThanZero = Bpl.Expr.Lt(e0, ZERO);
+              // Reused expressions
+              var e0GreaterThanZero = Bpl.Expr.Gt(e0, IntegerConstants.Zero);
+              var e0LessThanZero = Bpl.Expr.Lt(e0, IntegerConstants.Zero);
               switch (e.ResolvedOp) {
                 case BinaryExpr.ResolvedOpcode.Add:
                   var additionCondition = Bpl.Expr.Le(e0, Bpl.Expr.Binary(BinaryOperator.Opcode.Sub, IntegerConstants.MaxValue, e1));
                   var bothNegativesCondition = Bpl.Expr.Le(Bpl.Expr.Binary(BinaryOperator.Opcode.Sub, IntegerConstants.MinValue, e1), e0);
-                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0GreaterThanZero, Bpl.Expr.Gt(e1, ZERO)), additionCondition), "Integer addition overflows from above"));
-                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0LessThanZero, Bpl.Expr.Lt(e1, ZERO)), bothNegativesCondition), "Integer addition overflows from below"));
+                  // Split into cases depending the sign of both e0 and e1
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0GreaterThanZero, Bpl.Expr.Gt(e1, IntegerConstants.Zero)), additionCondition), "Integer addition overflows from above"));
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0LessThanZero, Bpl.Expr.Lt(e1, IntegerConstants.Zero)), bothNegativesCondition), "Integer addition overflows from below"));
                   break;
                 case BinaryExpr.ResolvedOpcode.Sub:
                   var substractionCondition = Bpl.Expr.Le(Bpl.Expr.Binary(BinaryOperator.Opcode.Add, IntegerConstants.MinValue, e1), e0);
                   var aboveCondition = Bpl.Expr.Le(e0, Bpl.Expr.Binary(BinaryOperator.Opcode.Sub, IntegerConstants.MaxValue, e1));
-                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0LessThanZero, Bpl.Expr.Gt(e1, ZERO)), substractionCondition), "Integer substractions overflows from below"));
-                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0GreaterThanZero, Bpl.Expr.Lt(e1, ZERO)), aboveCondition), "Integer substractions overflows from above"));
+                  // Split into cases depending the sign of both e0 and e1
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0LessThanZero, Bpl.Expr.Gt(e1, IntegerConstants.Zero)), substractionCondition), "Integer substractions overflows from below"));
+                  builder.Add(Assert(expr.tok, Bpl.Expr.Imp(Bpl.Expr.And(e0GreaterThanZero, Bpl.Expr.Lt(e1, IntegerConstants.Zero)), aboveCondition), "Integer substractions overflows from above"));
                   break;
               }
             } else if (e.Type.IsCharType) {
