@@ -14913,7 +14913,9 @@ namespace Microsoft.Dafny {
                 return TrToFunctionCall(expr.tok, "INTERNAL_add_boogie", Bpl.Type.Int, e0, e1, liftLit);
               } else if (!isReal && (DafnyOptions.O.ArithMode == 2 || 5 <= DafnyOptions.O.ArithMode)) {
                 return TrToFunctionCall(expr.tok, "Add", Bpl.Type.Int, oe0, oe1, liftLit);
-              } else {
+              } else if (!isReal) {
+                                return TrToFunctionCall(expr.tok, "$IntegerSum", Bpl.Type.Int, e0, e1, liftLit);
+                            } else {
                 typ = isReal ? Bpl.Type.Real : Bpl.Type.Int;
                 bOpcode = BinaryOperator.Opcode.Add;
                 break;

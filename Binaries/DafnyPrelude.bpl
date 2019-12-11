@@ -596,7 +596,7 @@ procedure $IntegerSum(x: int, y: int) returns (sum: int);
   requires IsIntegerRange(y);
   ensures sum == x+y;
   free ensures IsIntegerRange(sum);
-  
+
 
 
 // ---------------------------------------------------------------
