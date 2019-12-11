@@ -589,6 +589,16 @@ procedure $IterCollectNewObjects(prevHeap: Heap, newHeap: Heap, this: ref, NW: F
               read(newHeap, this, NW)[bx] ||
               ($Unbox(bx) != null && !read(prevHeap, $Unbox(bx):ref, alloc) && read(newHeap, $Unbox(bx):ref, alloc)));
 
+function IsIntegerRange(x: int) : bool { -2147483648 <= x && x <= 2147483647 }
+
+procedure $IntegerSum(x: int, y: int) returns (sum: int);
+  requires IsIntegerRange(x);
+  requires IsIntegerRange(y);
+  ensures sum == x+y;
+  free ensures IsIntegerRange(sum);
+  
+
+
 // ---------------------------------------------------------------
 // -- Axiomatizations --------------------------------------------
 // ---------------------------------------------------------------
