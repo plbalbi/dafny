@@ -1407,11 +1407,6 @@ namespace Dafny
       Normalize(this, that, out aa, out bb, out dd);
       return aa.CompareTo(bb);
     }
-    public int Sign {
-      get {
-        return num.Sign;
-      }
-    }
     public override int GetHashCode() {
       return num.GetHashCode() + 29 * den.GetHashCode();
     }
