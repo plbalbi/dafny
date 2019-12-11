@@ -7389,7 +7389,13 @@ namespace Microsoft.Dafny {
                 Contract.Assert(e.ResolvedOp == BinaryExpr.ResolvedOpcode.Sub);  // .Mul is not supported for char
                 builder.Add(Assert(expr.tok, Bpl.Expr.Le(e1, e0), "char subtraction might underflow"));
               }
-            }
+            } else if (e.Type.IsIntegerType && e.ResolvedOp == BinaryExpr.ResolvedOpcode.Add) {
+                            var e0InRange = FunctionCall(expr.tok, "IsIntegerRange", Bpl.Type.Bool, etran.TrExpr(e.E0));
+                            var e1InRange = FunctionCall(expr.tok, "IsIntegerRange", Bpl.Type.Bool, etran.TrExpr(e.E1));
+                            builder.Add(new AssumeCmd(expr.tok, e0InRange));
+                            builder.Add(new AssumeCmd(expr.tok, e1InRange));
+
+                        }
             CheckResultToBeInType(expr.tok, expr, expr.Type, locals, builder, etran);
             break;
           case BinaryExpr.ResolvedOpcode.Div:
