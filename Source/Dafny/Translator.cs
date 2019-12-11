@@ -7685,6 +7685,11 @@ namespace Microsoft.Dafny {
         CheckSubrange(expr.tok, bResult, expr.Type, resultType, builder);
         builder.Add(TrAssumeCmd(expr.tok, Bpl.Expr.Eq(result, bResult)));
         builder.Add(TrAssumeCmd(expr.tok, CanCallAssumption(expr, etran)));
+
+        if (expr is BinaryExpr) {
+            AddBinaryAdditionAssertionIfNecessary(expr.tok, builder, (BinaryExpr) expr, etran);
+        }
+
         builder.Add(new CommentCmd("CheckWellformedWithResult: any expression"));
         if (AlwaysUseHeap) {
           builder.Add(TrAssumeCmd(expr.tok, MkIsAlloc(result, resultType, etran.HeapExpr)));
@@ -7693,8 +7698,14 @@ namespace Microsoft.Dafny {
       }
     }
 
+    private void AddBinaryAdditionAssertionIfNecessary(IToken tok, BoogieStmtListBuilder builder, BinaryExpr expr, ExpressionTranslator etran) {
+        if (expr.ResolvedOp.Equals(BinaryExpr.ResolvedOpcode.Add)) {
+            builder.Add(Assert(tok, FunctionCall(tok, "IsIntegerRange", Bpl.Type.Bool, new List<Expr> { etran.TrExpr(expr) }), "Sum result out of range"));
+        }
+    }
+
     void CheckWellformedSpecialFunction(FunctionCallExpr expr, WFOptions options, Bpl.Expr result, Type resultType, List<Bpl.Variable> locals,
-                               BoogieStmtListBuilder builder, ExpressionTranslator etran) {
+                            BoogieStmtListBuilder builder, ExpressionTranslator etran) {
       Contract.Requires(expr.Function is SpecialFunction);
 
       string name = expr.Function.Name;
