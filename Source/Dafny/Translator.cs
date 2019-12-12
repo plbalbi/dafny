@@ -7685,11 +7685,6 @@ namespace Microsoft.Dafny {
         CheckSubrange(expr.tok, bResult, expr.Type, resultType, builder);
         builder.Add(TrAssumeCmd(expr.tok, Bpl.Expr.Eq(result, bResult)));
         builder.Add(TrAssumeCmd(expr.tok, CanCallAssumption(expr, etran)));
-
-        if (expr is BinaryExpr) {
-            AddBinaryAdditionAssertionIfNecessary(expr.tok, builder, (BinaryExpr) expr, etran);
-        }
-
         builder.Add(new CommentCmd("CheckWellformedWithResult: any expression"));
         if (AlwaysUseHeap) {
           builder.Add(TrAssumeCmd(expr.tok, MkIsAlloc(result, resultType, etran.HeapExpr)));
@@ -7698,9 +7693,9 @@ namespace Microsoft.Dafny {
       }
     }
 
-    private void AddBinaryAdditionAssertionIfNecessary(IToken tok, BoogieStmtListBuilder builder, Expression expr, ExpressionTranslator etran) {
-        if (expr is BinaryExpr && ((BinaryExpr) expr).ResolvedOp.Equals(BinaryExpr.ResolvedOpcode.Add)) {
-            builder.Add(Assert(tok, FunctionCall(tok, "IsIntegerRange", Bpl.Type.Bool, new List<Expr> { etran.TrExpr(expr) }), "Sum result out of range"));
+    private void AddBinaryAdditionAssertionIfNecessary(IToken tok, BoogieStmtListBuilder builder, Expression possibleBinaryExpr, Expr asignee, ExpressionTranslator etran) {
+        if (possibleBinaryExpr is BinaryExpr && ((BinaryExpr) possibleBinaryExpr).ResolvedOp.Equals(BinaryExpr.ResolvedOpcode.Add)) {
+            builder.Add(Assert(tok, FunctionCall(tok, "IsIntegerRange", Bpl.Type.Bool, new List<Expr> { asignee }), "Sum result out of range"));
         }
     }
 
@@ -12926,7 +12921,7 @@ namespace Microsoft.Dafny {
           // box the RHS, then do the assignment
           var cmd = Bpl.Cmd.SimpleAssign(tok, bGivenLhs, CondApplyBox(tok, bRhs, e.Expr.Type, lhsType));
           builder.Add(cmd);
-                    AddBinaryAdditionAssertionIfNecessary(tok, builder, e.Expr, etran);
+          AddBinaryAdditionAssertionIfNecessary(tok, builder, e.Expr, bGivenLhs, etran);
           return bGivenLhs;
         } else {
           // do the assignment, then box the result
