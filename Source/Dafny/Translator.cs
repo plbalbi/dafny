@@ -7698,8 +7698,8 @@ namespace Microsoft.Dafny {
       }
     }
 
-    private void AddBinaryAdditionAssertionIfNecessary(IToken tok, BoogieStmtListBuilder builder, BinaryExpr expr, ExpressionTranslator etran) {
-        if (expr.ResolvedOp.Equals(BinaryExpr.ResolvedOpcode.Add)) {
+    private void AddBinaryAdditionAssertionIfNecessary(IToken tok, BoogieStmtListBuilder builder, Expression expr, ExpressionTranslator etran) {
+        if (expr is BinaryExpr && ((BinaryExpr) expr).ResolvedOp.Equals(BinaryExpr.ResolvedOpcode.Add)) {
             builder.Add(Assert(tok, FunctionCall(tok, "IsIntegerRange", Bpl.Type.Bool, new List<Expr> { etran.TrExpr(expr) }), "Sum result out of range"));
         }
     }
@@ -12926,6 +12926,7 @@ namespace Microsoft.Dafny {
           // box the RHS, then do the assignment
           var cmd = Bpl.Cmd.SimpleAssign(tok, bGivenLhs, CondApplyBox(tok, bRhs, e.Expr.Type, lhsType));
           builder.Add(cmd);
+                    AddBinaryAdditionAssertionIfNecessary(tok, builder, e.Expr, etran);
           return bGivenLhs;
         } else {
           // do the assignment, then box the result
